@@ -43,5 +43,6 @@ var (
 		"endpoints":                struct{}{},
 		"secrets":                  struct{}{},
 		"configmaps":               struct{}{},
+		"ingresses":                struct{}{},
 	}
 )

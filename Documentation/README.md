@@ -61,7 +61,7 @@ Per group of metrics there is one file for each metrics. See each file for speci
 * [Endpoint Metrics](endpoint-metrics.md)
 * [Secret Metrics](secret-metrics.md)
 * [ConfigMap Metrics](configmap-metrics.md)
-
+* [Ingress Metrics](ingress-metrics.md)
 
 ## Join Metrics
 When an additional, not provided by default label is needed, a [Prometheus matching operator](https://prometheus.io/docs/prometheus/latest/querying/operators/#vector-matching) 
