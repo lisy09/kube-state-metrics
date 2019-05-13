@@ -38,22 +38,6 @@ var (
 
 	namespaceMetricFamilies = []metrics.FamilyGenerator{
 		metrics.FamilyGenerator{
-			Name: "kube_namespace_created",
-			Type: metrics.MetricTypeGauge,
-			Help: "Unix creation timestamp",
-			GenerateFunc: wrapNamespaceFunc(func(n *v1.Namespace) metrics.Family {
-				f := metrics.Family{}
-				if !n.CreationTimestamp.IsZero() {
-					f = append(f, &metrics.Metric{
-						Name:  "kube_namespace_created",
-						Value: float64(n.CreationTimestamp.Unix()),
-					})
-				}
-
-				return f
-			}),
-		},
-		metrics.FamilyGenerator{
 			Name: descNamespaceLabelsName,
 			Type: metrics.MetricTypeGauge,
 			Help: descNamespaceLabelsHelp,
@@ -79,30 +63,6 @@ var (
 					LabelValues: annotationValues,
 					Value:       1,
 				}}
-			}),
-		},
-		metrics.FamilyGenerator{
-			Name: "kube_namespace_status_phase",
-			Type: metrics.MetricTypeGauge,
-			Help: "kubernetes namespace status phase.",
-			GenerateFunc: wrapNamespaceFunc(func(n *v1.Namespace) metrics.Family {
-				families := metrics.Family{
-					&metrics.Metric{
-						LabelValues: []string{string(v1.NamespaceActive)},
-						Value:       boolFloat64(n.Status.Phase == v1.NamespaceActive),
-					},
-					&metrics.Metric{
-						LabelValues: []string{string(v1.NamespaceTerminating)},
-						Value:       boolFloat64(n.Status.Phase == v1.NamespaceTerminating),
-					},
-				}
-
-				for _, f := range families {
-					f.Name = "kube_namespace_status_phase"
-					f.LabelKeys = []string{"phase"}
-				}
-
-				return families
 			}),
 		},
 	}

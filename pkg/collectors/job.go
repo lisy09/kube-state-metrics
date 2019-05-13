@@ -76,57 +76,6 @@ var (
 			}),
 		},
 		metrics.FamilyGenerator{
-			Name: "kube_job_spec_parallelism",
-			Type: metrics.MetricTypeGauge,
-			Help: "The maximum desired number of pods the job should run at any given time.",
-			GenerateFunc: wrapJobFunc(func(j *v1batch.Job) metrics.Family {
-				f := metrics.Family{}
-
-				if j.Spec.Parallelism != nil {
-					f = append(f, &metrics.Metric{
-						Name:  "kube_job_spec_parallelism",
-						Value: float64(*j.Spec.Parallelism),
-					})
-				}
-
-				return f
-			}),
-		},
-		metrics.FamilyGenerator{
-			Name: "kube_job_spec_completions",
-			Type: metrics.MetricTypeGauge,
-			Help: "The desired number of successfully finished pods the job should be run with.",
-			GenerateFunc: wrapJobFunc(func(j *v1batch.Job) metrics.Family {
-				f := metrics.Family{}
-
-				if j.Spec.Completions != nil {
-					f = append(f, &metrics.Metric{
-						Name:  "kube_job_spec_completions",
-						Value: float64(*j.Spec.Completions),
-					})
-				}
-
-				return f
-			}),
-		},
-		metrics.FamilyGenerator{
-			Name: "kube_job_spec_active_deadline_seconds",
-			Type: metrics.MetricTypeGauge,
-			Help: "The duration in seconds relative to the startTime that the job may be active before the system tries to terminate it.",
-			GenerateFunc: wrapJobFunc(func(j *v1batch.Job) metrics.Family {
-				f := metrics.Family{}
-
-				if j.Spec.ActiveDeadlineSeconds != nil {
-					f = append(f, &metrics.Metric{
-						Name:  "kube_job_spec_active_deadline_seconds",
-						Value: float64(*j.Spec.ActiveDeadlineSeconds),
-					})
-				}
-
-				return f
-			}),
-		},
-		metrics.FamilyGenerator{
 			Name: "kube_job_status_succeeded",
 			Type: metrics.MetricTypeGauge,
 			Help: "The number of pods which reached Phase Succeeded.",

@@ -45,19 +45,6 @@ var (
 			}),
 		},
 		metrics.FamilyGenerator{
-			Name: "kube_secret_type",
-			Type: metrics.MetricTypeGauge,
-			Help: "Type about secret.",
-			GenerateFunc: wrapSecretFunc(func(s *v1.Secret) metrics.Family {
-				return metrics.Family{&metrics.Metric{
-					Name:        "kube_secret_type",
-					LabelKeys:   []string{"type"},
-					LabelValues: []string{string(s.Type)},
-					Value:       1,
-				}}
-			}),
-		},
-		metrics.FamilyGenerator{
 			Name: descSecretLabelsName,
 			Type: metrics.MetricTypeGauge,
 			Help: descSecretLabelsHelp,
@@ -87,19 +74,6 @@ var (
 				}
 
 				return f
-			}),
-		},
-		metrics.FamilyGenerator{
-			Name: "kube_secret_metadata_resource_version",
-			Type: metrics.MetricTypeGauge,
-			Help: "Resource version representing a specific version of secret.",
-			GenerateFunc: wrapSecretFunc(func(s *v1.Secret) metrics.Family {
-				return metrics.Family{&metrics.Metric{
-					Name:        "kube_secret_metadata_resource_version",
-					LabelKeys:   []string{"resource_version"},
-					LabelValues: []string{string(s.ObjectMeta.ResourceVersion)},
-					Value:       1,
-				}}
 			}),
 		},
 	}

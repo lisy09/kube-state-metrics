@@ -65,20 +65,6 @@ var (
 			}),
 		},
 		metrics.FamilyGenerator{
-			Name: "kube_service_spec_type",
-			Type: metrics.MetricTypeGauge,
-			Help: "Type about service.",
-			GenerateFunc: wrapSvcFunc(func(s *v1.Service) metrics.Family {
-				m := metrics.Metric{
-					Name:        "kube_service_spec_type",
-					LabelKeys:   []string{"type"},
-					LabelValues: []string{string(s.Spec.Type)},
-					Value:       1,
-				}
-				return metrics.Family{&m}
-			}),
-		},
-		metrics.FamilyGenerator{
 			Name: descServiceLabelsName,
 			Type: metrics.MetricTypeGauge,
 			Help: descServiceLabelsHelp,
@@ -91,49 +77,6 @@ var (
 					Value:       1,
 				}
 				return metrics.Family{&m}
-			}),
-		},
-		{
-			Name: "kube_service_spec_external_ip",
-			Type: metrics.MetricTypeGauge,
-			Help: "Service external ips. One series for each ip",
-			GenerateFunc: wrapSvcFunc(func(s *v1.Service) metrics.Family {
-				family := metrics.Family{}
-
-				if len(s.Spec.ExternalIPs) > 0 {
-					for _, externalIP := range s.Spec.ExternalIPs {
-						family = append(family, &metrics.Metric{
-							Name:        "kube_service_spec_external_ip",
-							LabelKeys:   []string{"external_ip"},
-							LabelValues: []string{externalIP},
-							Value:       1,
-						})
-					}
-				}
-
-				return family
-			}),
-		},
-		{
-			Name: "kube_service_status_load_balancer_ingress",
-			Type: metrics.MetricTypeGauge,
-			Help: "Service load balancer ingress status",
-			GenerateFunc: wrapSvcFunc(func(s *v1.Service) metrics.Family {
-				family := metrics.Family{}
-
-				if len(s.Status.LoadBalancer.Ingress) > 0 {
-					for _, ingress := range s.Status.LoadBalancer.Ingress {
-						family = append(family, &metrics.Metric{
-							Name:        "kube_service_status_load_balancer_ingress",
-							LabelKeys:   []string{"ip", "hostname"},
-							LabelValues: []string{ingress.IP, ingress.Hostname},
-							Value:       1,
-						})
-
-					}
-				}
-
-				return family
 			}),
 		},
 	}

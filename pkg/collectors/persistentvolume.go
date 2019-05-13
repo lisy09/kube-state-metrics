@@ -48,47 +48,6 @@ var (
 			}),
 		},
 		metrics.FamilyGenerator{
-			Name: "kube_persistentvolume_status_phase",
-			Type: metrics.MetricTypeGauge,
-			Help: "The phase indicates if a volume is available, bound to a claim, or released by a claim.",
-			GenerateFunc: wrapPersistentVolumeFunc(func(p *v1.PersistentVolume) metrics.Family {
-				f := metrics.Family{}
-
-				// Set current phase to 1, others to 0 if it is set.
-				if p := p.Status.Phase; p != "" {
-					f = append(f,
-						&metrics.Metric{
-							LabelValues: []string{string(v1.VolumePending)},
-							Value:       boolFloat64(p == v1.VolumePending),
-						},
-						&metrics.Metric{
-							LabelValues: []string{string(v1.VolumeAvailable)},
-							Value:       boolFloat64(p == v1.VolumeAvailable),
-						},
-						&metrics.Metric{
-							LabelValues: []string{string(v1.VolumeBound)},
-							Value:       boolFloat64(p == v1.VolumeBound),
-						},
-						&metrics.Metric{
-							LabelValues: []string{string(v1.VolumeReleased)},
-							Value:       boolFloat64(p == v1.VolumeReleased),
-						},
-						&metrics.Metric{
-							LabelValues: []string{string(v1.VolumeFailed)},
-							Value:       boolFloat64(p == v1.VolumeFailed),
-						},
-					)
-				}
-
-				for _, m := range f {
-					m.Name = "kube_persistentvolume_status_phase"
-					m.LabelKeys = []string{"phase"}
-				}
-
-				return f
-			}),
-		},
-		metrics.FamilyGenerator{
 			Name: "kube_persistentvolume_info",
 			Type: metrics.MetricTypeGauge,
 			Help: "Information about persistentvolume.",

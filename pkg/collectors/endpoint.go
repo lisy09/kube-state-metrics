@@ -45,23 +45,6 @@ var (
 			}),
 		},
 		metrics.FamilyGenerator{
-			Name: "kube_endpoint_created",
-			Type: metrics.MetricTypeGauge,
-			Help: "Unix creation timestamp",
-			GenerateFunc: wrapEndpointFunc(func(e *v1.Endpoints) metrics.Family {
-				f := metrics.Family{}
-
-				if !e.CreationTimestamp.IsZero() {
-					f = append(f, &metrics.Metric{
-						Name:  "kube_endpoint_created",
-						Value: float64(e.CreationTimestamp.Unix()),
-					})
-				}
-
-				return f
-			}),
-		},
-		metrics.FamilyGenerator{
 			Name: descEndpointLabelsName,
 			Type: metrics.MetricTypeGauge,
 			Help: descEndpointLabelsHelp,
@@ -72,37 +55,6 @@ var (
 					LabelKeys:   labelKeys,
 					LabelValues: labelValues,
 					Value:       1,
-				}}
-			}),
-		},
-		metrics.FamilyGenerator{
-			Name: "kube_endpoint_address_available",
-			Type: metrics.MetricTypeGauge,
-			Help: "Number of addresses available in endpoint.",
-			GenerateFunc: wrapEndpointFunc(func(e *v1.Endpoints) metrics.Family {
-				var available int
-				for _, s := range e.Subsets {
-					available += len(s.Addresses) * len(s.Ports)
-				}
-
-				return metrics.Family{&metrics.Metric{
-					Name:  "kube_endpoint_address_available",
-					Value: float64(available),
-				}}
-			}),
-		},
-		metrics.FamilyGenerator{
-			Name: "kube_endpoint_address_not_ready",
-			Type: metrics.MetricTypeGauge,
-			Help: "Number of addresses not ready in endpoint",
-			GenerateFunc: wrapEndpointFunc(func(e *v1.Endpoints) metrics.Family {
-				var notReady int
-				for _, s := range e.Subsets {
-					notReady += len(s.NotReadyAddresses) * len(s.Ports)
-				}
-				return metrics.Family{&metrics.Metric{
-					Name:  "kube_endpoint_address_not_ready",
-					Value: float64(notReady),
 				}}
 			}),
 		},

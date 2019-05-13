@@ -17,7 +17,6 @@ limitations under the License.
 package collectors
 
 import (
-	"k8s.io/kube-state-metrics/pkg/constant"
 	"k8s.io/kube-state-metrics/pkg/metrics"
 
 	"k8s.io/api/core/v1"
@@ -26,7 +25,6 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
-	"k8s.io/kubernetes/pkg/apis/core/v1/helper"
 )
 
 var (
@@ -94,17 +92,6 @@ var (
 			}),
 		},
 		metrics.FamilyGenerator{
-			Name: "kube_node_spec_unschedulable",
-			Type: metrics.MetricTypeGauge,
-			Help: "Whether a node can schedule new pods.",
-			GenerateFunc: wrapNodeFunc(func(n *v1.Node) metrics.Family {
-				return metrics.Family{&metrics.Metric{
-					Name:  "kube_node_spec_unschedulable",
-					Value: boolFloat64(n.Spec.Unschedulable),
-				}}
-			}),
-		},
-		metrics.FamilyGenerator{
 			Name: "kube_node_spec_taint",
 			Type: metrics.MetricTypeGauge,
 			Help: "The taint of a cluster node.",
@@ -152,116 +139,6 @@ var (
 			}),
 		},
 		metrics.FamilyGenerator{
-			Name: "kube_node_status_phase",
-			Type: metrics.MetricTypeGauge,
-			Help: "The phase the node is currently in.",
-			GenerateFunc: wrapNodeFunc(func(n *v1.Node) metrics.Family {
-				f := metrics.Family{}
-
-				// Set current phase to 1, others to 0 if it is set.
-				if p := n.Status.Phase; p != "" {
-					f = append(f,
-						&metrics.Metric{
-							LabelValues: []string{string(v1.NodePending)},
-							Value:       boolFloat64(p == v1.NodePending),
-						},
-						&metrics.Metric{
-							LabelValues: []string{string(v1.NodeRunning)},
-							Value:       boolFloat64(p == v1.NodeRunning),
-						},
-						&metrics.Metric{
-							LabelValues: []string{string(v1.NodeTerminated)},
-							Value:       boolFloat64(p == v1.NodeTerminated),
-						},
-					)
-				}
-
-				for _, metric := range f {
-					metric.Name = "kube_node_status_phase"
-					metric.LabelKeys = []string{"phase"}
-				}
-
-				return f
-			}),
-		},
-		metrics.FamilyGenerator{
-			Name: "kube_node_status_capacity",
-			Type: metrics.MetricTypeGauge,
-			Help: "The capacity for different resources of a node.",
-			GenerateFunc: wrapNodeFunc(func(n *v1.Node) metrics.Family {
-				f := metrics.Family{}
-
-				capacity := n.Status.Capacity
-				for resourceName, val := range capacity {
-					switch resourceName {
-					case v1.ResourceCPU:
-						f = append(f, &metrics.Metric{
-							LabelValues: []string{
-								sanitizeLabelName(string(resourceName)),
-								string(constant.UnitCore),
-							},
-							Value: float64(val.MilliValue()) / 1000,
-						})
-					case v1.ResourceStorage:
-						fallthrough
-					case v1.ResourceEphemeralStorage:
-						fallthrough
-					case v1.ResourceMemory:
-						f = append(f, &metrics.Metric{
-							LabelValues: []string{
-								sanitizeLabelName(string(resourceName)),
-								string(constant.UnitByte),
-							},
-							Value: float64(val.MilliValue()) / 1000,
-						})
-					case v1.ResourcePods:
-						f = append(f, &metrics.Metric{
-							LabelValues: []string{
-								sanitizeLabelName(string(resourceName)),
-								string(constant.UnitInteger),
-							},
-							Value: float64(val.MilliValue()) / 1000,
-						})
-					default:
-						if helper.IsHugePageResourceName(resourceName) {
-							f = append(f, &metrics.Metric{
-								LabelValues: []string{
-									sanitizeLabelName(string(resourceName)),
-									string(constant.UnitByte),
-								},
-								Value: float64(val.MilliValue()) / 1000,
-							})
-						}
-						if helper.IsAttachableVolumeResourceName(resourceName) {
-							f = append(f, &metrics.Metric{
-								LabelValues: []string{
-									sanitizeLabelName(string(resourceName)),
-									string(constant.UnitByte),
-								},
-								Value: float64(val.MilliValue()) / 1000,
-							})
-						}
-						if helper.IsExtendedResourceName(resourceName) {
-							f = append(f, &metrics.Metric{
-								LabelValues: []string{
-									sanitizeLabelName(string(resourceName)),
-									string(constant.UnitInteger),
-								},
-								Value: float64(val.MilliValue()) / 1000,
-							})
-						}
-					}
-				}
-
-				for _, metric := range f {
-					metric.Name = "kube_node_status_capacity"
-					metric.LabelKeys = []string{"resource", "unit"}
-				}
-
-				return f
-			}),
-		},
-		metrics.FamilyGenerator{
 			Name: "kube_node_status_capacity_pods",
 			Type: metrics.MetricTypeGauge,
 			Help: "The total pod resources of the node.",
@@ -272,174 +149,6 @@ var (
 				if v, ok := n.Status.Capacity[v1.ResourcePods]; ok {
 					f = append(f, &metrics.Metric{
 						Name:  "kube_node_status_capacity_pods",
-						Value: float64(v.MilliValue()) / 1000,
-					})
-				}
-
-				return f
-			}),
-		},
-		metrics.FamilyGenerator{
-			Name: "kube_node_status_capacity_cpu_cores",
-			Type: metrics.MetricTypeGauge,
-			Help: "The total CPU resources of the node.",
-			GenerateFunc: wrapNodeFunc(func(n *v1.Node) metrics.Family {
-				f := metrics.Family{}
-
-				// Add capacity and allocatable resources if they are set.
-				if v, ok := n.Status.Capacity[v1.ResourceCPU]; ok {
-					f = append(f, &metrics.Metric{
-						Name:  "kube_node_status_capacity_cpu_cores",
-						Value: float64(v.MilliValue()) / 1000,
-					})
-				}
-
-				return f
-			}),
-		},
-		metrics.FamilyGenerator{
-			Name: "kube_node_status_capacity_memory_bytes",
-			Type: metrics.MetricTypeGauge,
-			Help: "The total memory resources of the node.",
-			GenerateFunc: wrapNodeFunc(func(n *v1.Node) metrics.Family {
-				f := metrics.Family{}
-
-				// Add capacity and allocatable resources if they are set.
-				if v, ok := n.Status.Capacity[v1.ResourceMemory]; ok {
-					f = append(f, &metrics.Metric{
-						Name:  "kube_node_status_capacity_memory_bytes",
-						Value: float64(v.MilliValue()) / 1000,
-					})
-				}
-
-				return f
-			}),
-		},
-		metrics.FamilyGenerator{
-			Name: "kube_node_status_allocatable",
-			Type: metrics.MetricTypeGauge,
-			Help: "The allocatable for different resources of a node that are available for scheduling.",
-			GenerateFunc: wrapNodeFunc(func(n *v1.Node) metrics.Family {
-				f := metrics.Family{}
-
-				allocatable := n.Status.Allocatable
-
-				for resourceName, val := range allocatable {
-					switch resourceName {
-					case v1.ResourceCPU:
-						f = append(f, &metrics.Metric{
-							LabelValues: []string{
-								sanitizeLabelName(string(resourceName)),
-								string(constant.UnitCore),
-							},
-							Value: float64(val.MilliValue()) / 1000,
-						})
-					case v1.ResourceStorage:
-						fallthrough
-					case v1.ResourceEphemeralStorage:
-						fallthrough
-					case v1.ResourceMemory:
-						f = append(f, &metrics.Metric{
-							LabelValues: []string{
-								sanitizeLabelName(string(resourceName)),
-								string(constant.UnitByte),
-							},
-							Value: float64(val.MilliValue()) / 1000,
-						})
-					case v1.ResourcePods:
-						f = append(f, &metrics.Metric{
-							LabelValues: []string{
-								sanitizeLabelName(string(resourceName)),
-								string(constant.UnitInteger),
-							},
-							Value: float64(val.MilliValue()) / 1000,
-						})
-					default:
-						if helper.IsHugePageResourceName(resourceName) {
-							f = append(f, &metrics.Metric{
-								LabelValues: []string{
-									sanitizeLabelName(string(resourceName)),
-									string(constant.UnitByte),
-								},
-								Value: float64(val.MilliValue()) / 1000,
-							})
-						}
-						if helper.IsAttachableVolumeResourceName(resourceName) {
-							f = append(f, &metrics.Metric{
-								LabelValues: []string{
-									sanitizeLabelName(string(resourceName)),
-									string(constant.UnitByte),
-								},
-								Value: float64(val.MilliValue()) / 1000,
-							})
-						}
-						if helper.IsExtendedResourceName(resourceName) {
-							f = append(f, &metrics.Metric{
-								LabelValues: []string{
-									sanitizeLabelName(string(resourceName)),
-									string(constant.UnitInteger),
-								},
-								Value: float64(val.MilliValue()) / 1000,
-							})
-						}
-					}
-				}
-
-				for _, m := range f {
-					m.Name = "kube_node_status_allocatable"
-					m.LabelKeys = []string{"resource", "unit"}
-				}
-
-				return f
-			}),
-		},
-		metrics.FamilyGenerator{
-			Name: "kube_node_status_allocatable_pods",
-			Type: metrics.MetricTypeGauge,
-			Help: "The pod resources of a node that are available for scheduling.",
-			GenerateFunc: wrapNodeFunc(func(n *v1.Node) metrics.Family {
-				f := metrics.Family{}
-
-				// Add capacity and allocatable resources if they are set.
-				if v, ok := n.Status.Allocatable[v1.ResourcePods]; ok {
-					f = append(f, &metrics.Metric{
-						Name:  "kube_node_status_allocatable_pods",
-						Value: float64(v.MilliValue()) / 1000,
-					})
-				}
-
-				return f
-			}),
-		},
-		metrics.FamilyGenerator{
-			Name: "kube_node_status_allocatable_cpu_cores",
-			Type: metrics.MetricTypeGauge,
-			Help: "The CPU resources of a node that are available for scheduling.",
-			GenerateFunc: wrapNodeFunc(func(n *v1.Node) metrics.Family {
-				f := metrics.Family{}
-
-				// Add capacity and allocatable resources if they are set.
-				if v, ok := n.Status.Allocatable[v1.ResourceCPU]; ok {
-					f = append(f, &metrics.Metric{
-						Name:  "kube_node_status_allocatable_cpu_cores",
-						Value: float64(v.MilliValue()) / 1000,
-					})
-				}
-
-				return f
-			}),
-		},
-		metrics.FamilyGenerator{
-			Name: "kube_node_status_allocatable_memory_bytes",
-			Type: metrics.MetricTypeGauge,
-			Help: "The memory resources of a node that are available for scheduling.",
-			GenerateFunc: wrapNodeFunc(func(n *v1.Node) metrics.Family {
-				f := metrics.Family{}
-
-				// Add capacity and allocatable resources if they are set.
-				if v, ok := n.Status.Allocatable[v1.ResourceMemory]; ok {
-					f = append(f, &metrics.Metric{
-						Name:  "kube_node_status_allocatable_memory_bytes",
 						Value: float64(v.MilliValue()) / 1000,
 					})
 				}

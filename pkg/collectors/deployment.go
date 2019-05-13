@@ -22,7 +22,6 @@ import (
 	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/watch"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
@@ -85,28 +84,6 @@ var (
 			}),
 		},
 		metrics.FamilyGenerator{
-			Name: "kube_deployment_status_replicas_updated",
-			Type: metrics.MetricTypeGauge,
-			Help: "The number of updated replicas per deployment.",
-			GenerateFunc: wrapDeploymentFunc(func(d *v1beta1.Deployment) metrics.Family {
-				return metrics.Family{&metrics.Metric{
-					Name:  "kube_deployment_status_replicas_updated",
-					Value: float64(d.Status.UpdatedReplicas),
-				}}
-			}),
-		},
-		metrics.FamilyGenerator{
-			Name: "kube_deployment_status_observed_generation",
-			Type: metrics.MetricTypeGauge,
-			Help: "The generation observed by the deployment controller.",
-			GenerateFunc: wrapDeploymentFunc(func(d *v1beta1.Deployment) metrics.Family {
-				return metrics.Family{&metrics.Metric{
-					Name:  "kube_deployment_status_observed_generation",
-					Value: float64(d.Status.ObservedGeneration),
-				}}
-			}),
-		},
-		metrics.FamilyGenerator{
 			Name: "kube_deployment_spec_replicas",
 			Type: metrics.MetricTypeGauge,
 			Help: "Number of desired pods for a deployment.",
@@ -114,68 +91,6 @@ var (
 				return metrics.Family{&metrics.Metric{
 					Name:  "kube_deployment_spec_replicas",
 					Value: float64(*d.Spec.Replicas),
-				}}
-			}),
-		},
-		metrics.FamilyGenerator{
-			Name: "kube_deployment_spec_paused",
-			Type: metrics.MetricTypeGauge,
-			Help: "Whether the deployment is paused and will not be processed by the deployment controller.",
-			GenerateFunc: wrapDeploymentFunc(func(d *v1beta1.Deployment) metrics.Family {
-				return metrics.Family{&metrics.Metric{
-					Name:  "kube_deployment_spec_paused",
-					Value: boolFloat64(d.Spec.Paused),
-				}}
-			}),
-		},
-		metrics.FamilyGenerator{
-			Name: "kube_deployment_spec_strategy_rollingupdate_max_unavailable",
-			Type: metrics.MetricTypeGauge,
-			Help: "Maximum number of unavailable replicas during a rolling update of a deployment.",
-			GenerateFunc: wrapDeploymentFunc(func(d *v1beta1.Deployment) metrics.Family {
-				if d.Spec.Strategy.RollingUpdate == nil {
-					return metrics.Family{}
-				}
-
-				maxUnavailable, err := intstr.GetValueFromIntOrPercent(d.Spec.Strategy.RollingUpdate.MaxUnavailable, int(*d.Spec.Replicas), true)
-				if err != nil {
-					panic(err)
-				}
-
-				return metrics.Family{&metrics.Metric{
-					Name:  "kube_deployment_spec_strategy_rollingupdate_max_unavailable",
-					Value: float64(maxUnavailable),
-				}}
-			}),
-		},
-		metrics.FamilyGenerator{
-			Name: "kube_deployment_spec_strategy_rollingupdate_max_surge",
-			Type: metrics.MetricTypeGauge,
-			Help: "Maximum number of replicas that can be scheduled above the desired number of replicas during a rolling update of a deployment.",
-			GenerateFunc: wrapDeploymentFunc(func(d *v1beta1.Deployment) metrics.Family {
-				if d.Spec.Strategy.RollingUpdate == nil {
-					return metrics.Family{}
-				}
-
-				maxSurge, err := intstr.GetValueFromIntOrPercent(d.Spec.Strategy.RollingUpdate.MaxSurge, int(*d.Spec.Replicas), true)
-				if err != nil {
-					panic(err)
-				}
-
-				return metrics.Family{&metrics.Metric{
-					Name:  "kube_deployment_spec_strategy_rollingupdate_max_surge",
-					Value: float64(maxSurge),
-				}}
-			}),
-		},
-		metrics.FamilyGenerator{
-			Name: "kube_deployment_metadata_generation",
-			Type: metrics.MetricTypeGauge,
-			Help: "Sequence number representing a specific generation of the desired state.",
-			GenerateFunc: wrapDeploymentFunc(func(d *v1beta1.Deployment) metrics.Family {
-				return metrics.Family{&metrics.Metric{
-					Name:  "kube_deployment_metadata_generation",
-					Value: float64(d.ObjectMeta.Generation),
 				}}
 			}),
 		},

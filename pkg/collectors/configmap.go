@@ -65,21 +65,6 @@ var (
 				return f
 			}),
 		},
-		metrics.FamilyGenerator{
-			Name: "kube_configmap_metadata_resource_version",
-			Type: metrics.MetricTypeGauge,
-			Help: "Resource version representing a specific version of the configmap.",
-			GenerateFunc: wrapConfigMapFunc(func(c *v1.ConfigMap) metrics.Family {
-				return metrics.Family{
-					&metrics.Metric{
-						Name:        "kube_configmap_metadata_resource_version",
-						LabelKeys:   []string{"resource_version"},
-						LabelValues: []string{string(c.ObjectMeta.ResourceVersion)},
-						Value:       1,
-					},
-				}
-			}),
-		},
 	}
 )
 

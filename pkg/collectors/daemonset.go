@@ -144,19 +144,6 @@ var (
 			}),
 		},
 		metrics.FamilyGenerator{
-			Name: "kube_daemonset_metadata_generation",
-			Type: metrics.MetricTypeGauge,
-			Help: "Sequence number representing a specific generation of the desired state.",
-			GenerateFunc: wrapDaemonSetFunc(func(d *v1beta1.DaemonSet) metrics.Family {
-				return metrics.Family{&metrics.Metric{
-					Name:        "kube_daemonset_metadata_generation",
-					LabelKeys:   []string{},
-					LabelValues: []string{},
-					Value:       float64(d.ObjectMeta.Generation),
-				}}
-			}),
-		},
-		metrics.FamilyGenerator{
 			Name: descDaemonSetLabelsName,
 			Type: metrics.MetricTypeGauge,
 			Help: descDaemonSetLabelsHelp,
