@@ -1,6 +1,11 @@
-FROM gcr.io/distroless/static
+# FROM gcr.io/distroless/static
+FROM debian:buster-slim
 
-COPY kube-state-metrics /
+ARG TARGETOS
+ARG TARGETARCH
+ARG TARGETVARIANT
+
+COPY /bin/kube-state-metrics-${TARGETOS}-${TARGETARCH}${TARGETVARIANT} /kube-state-metrics
 
 USER nobody
 
